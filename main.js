@@ -9,8 +9,9 @@
 
 const $ = (id) => document.getElementById(id);
 
-const canvas = $("game");
+const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
+
 ctx.imageSmoothingEnabled = false;
 
 const ui = {
@@ -132,8 +133,11 @@ function defaultState() {
     lastHungerDecayAt: t,
     lastHappyDecayAt: t,
 
-    // currency (Step4寄りだが、Step3の分岐にも使えるので先に入れておく)
+    // currency
     gotchiPoints: 0,
+
+    // mode (home/slot等。無いとボタンがreturnし続けることがある)
+    mode: "home",
 
     // misc
     dead: false,
@@ -142,7 +146,52 @@ function defaultState() {
   };
 }
 
-let state = load() ?? defaultState();
+/**
+ * 既存セーブを読み込んだときに、後から増えたキーを補完する（マイグレーション）
+ * これが無いとメーターが ---- のままになったり、stageが無くて卵が出ない。
+ */
+function migrateState(s) {
+  const d = defaultState();
+
+  // まず default をベースに上書き（不足キー補完）
+  const merged = { ...d, ...(s ?? {}) };
+
+  // 型が壊れてる可能性のあるものは補正
+  merged.hungerH = clampInt(merged.hungerH ?? d.hungerH, 0, HEART_MAX);
+  merged.happyH = clampInt(merged.happyH ?? d.happyH, 0, HEART_MAX);
+  merged.disciplineH = clampInt(merged.disciplineH ?? d.disciplineH, 0, HEART_MAX);
+
+  merged.poopCount = clampInt(merged.poopCount ?? 0, 0, 99);
+  merged.sickLevel = clampInt(merged.sickLevel ?? 0, 0, 2);
+  merged.medicineNeed = clampInt(merged.medicineNeed ?? 0, 0, 2);
+
+  merged.careMistakes = clampInt(merged.careMistakes ?? 0, 0, 999);
+  merged.gotchiPoints = clampInt(merged.gotchiPoints ?? 0, 0, 999999);
+
+  merged.dead = !!merged.dead;
+  merged.sleeping = !!merged.sleeping;
+  merged.lightsOff = !!merged.lightsOff;
+
+  merged.mode = merged.mode ?? "home";
+
+  // growth
+  merged.stage = merged.stage ?? "egg";
+  merged.form = merged.form ?? "A";
+  merged.bornAt = typeof merged.bornAt === "number" ? merged.bornAt : d.bornAt;
+  merged.ageMin = typeof merged.ageMin === "number" ? merged.ageMin : 0;
+
+  merged.lastUpdate = typeof merged.lastUpdate === "number" ? merged.lastUpdate : d.lastUpdate;
+  merged.lastHungerDecayAt =
+    typeof merged.lastHungerDecayAt === "number" ? merged.lastHungerDecayAt : d.lastHungerDecayAt;
+  merged.lastHappyDecayAt =
+    typeof merged.lastHappyDecayAt === "number" ? merged.lastHappyDecayAt : d.lastHappyDecayAt;
+
+  merged.msg = typeof merged.msg === "string" ? merged.msg : d.msg;
+
+  return merged;
+}
+
+let state = migrateState(load());
 log(state.msg);
 
 // =====================
@@ -163,6 +212,7 @@ function load() {
     return null;
   }
 }
+
 
 // =====================
 // UI: actions
@@ -198,6 +248,7 @@ ui.meal.onclick = () => {
 
   resolveAttentionIfMatches(["HUNGER"]);
   log("もぐもぐ（ごはん）");
+  updateUI();
   save();
 };
 
@@ -212,6 +263,7 @@ ui.snack.onclick = () => {
   state.happyH = clampInt(state.happyH + 1, 0, HEART_MAX);
   resolveAttentionIfMatches(["HAPPY"]);
   log("おやつ！");
+  updateUI();
   save();
 };
 
@@ -226,6 +278,7 @@ ui.game.onclick = () => {
     slotAdvance();
   }
 
+  updateUI();
   save();
 };
 
@@ -306,6 +359,7 @@ function enterSlotMode() {
   resetSlot();
   log("SLOT：ゲームでスタート→順にストップ");
   updateButtonsForMode();
+  updateUI();
   save();
 }
 
@@ -313,6 +367,7 @@ function exitSlotMode() {
   state.mode = "home";
   log("もどった！");
   updateButtonsForMode();
+  updateUI();
   save();
 }
 
@@ -354,6 +409,7 @@ ui.clean.onclick = () => {
   state.poopSince = null;
   resolveAttentionIfMatches(["POOP"]);
   log("💩をながした！");
+  updateUI();
   save();
 };
 
@@ -370,6 +426,7 @@ ui.med.onclick = () => {
   } else {
     log(`くすり…あと${state.medicineNeed}回`);
   }
+  updateUI();
   save();
 };
 
@@ -379,6 +436,7 @@ ui.disc.onclick = () => {
     // 叱る必要がないのに叱る（軽いペナルティ）
     state.happyH = clampInt(state.happyH - 1, 0, HEART_MAX);
     log("しつけは今じゃない…（ごきげん-1）");
+    updateUI();
     save();
     return;
   }
@@ -388,6 +446,7 @@ ui.disc.onclick = () => {
   state.refuse = null;
   resolveAttention(); // DISCIPLINEを解除
   log("しつけした！（しつけ+1）");
+  updateUI();
   save();
 };
 
@@ -399,6 +458,7 @@ ui.light.onclick = () => {
   // LIGHTS attentionは「寝ているのに消灯してない」時に出す
   if (state.sleeping && state.lightsOff) resolveAttentionIfMatches(["LIGHTS"]);
   log(label);
+  updateUI();
   save();
 };
 
@@ -407,6 +467,7 @@ ui.reset.onclick = () => {
   localStorage.removeItem(STORAGE_KEY);
   state = defaultState();
   log("データを初期化した");
+  updateUI();
   save();
 };
 
@@ -481,22 +542,43 @@ function step() {
 }
 
 function evolveIfNeeded() {
-  // stageの閾値（経過分）
   const m = state.ageMin;
 
   if (state.stage === "egg" && m >= GROWTH_MIN.egg) {
     state.stage = "infant";
-    log("たまごがかえった！");
-  } else if (state.stage === "infant" && m >= GROWTH_MIN.infant) {
+    state.msg = "たまごがかえった！";
+    log(state.msg);
+    save();
+    render();
+    return; // ★これが重要：1 tick で1段階だけ
+  }
+
+  if (state.stage === "infant" && m >= GROWTH_MIN.infant) {
     state.stage = "rebel";
-    log("ちょっと反抗的…！");
-  } else if (state.stage === "rebel" && m >= GROWTH_MIN.rebel) {
+    state.msg = "ちょっと反抗的…！";
+    log(state.msg);
+    save();
+    render();
+    return;
+  }
+
+  if (state.stage === "rebel" && m >= GROWTH_MIN.rebel) {
     state.stage = "teen";
-    log("思春期っぽい！");
-  } else if (state.stage === "teen" && m >= GROWTH_MIN.teen) {
+    state.msg = "思春期っぽい！";
+    log(state.msg);
+    save();
+    render();
+    return;
+  }
+
+  if (state.stage === "teen" && m >= GROWTH_MIN.teen) {
     state.stage = "adult";
     state.form = decideAdultForm(state);
-    log(`成長した！ type:${state.form}`);
+    state.msg = `成長した！ type:${state.form}`;
+    log(state.msg);
+    save();
+    render();
+    return;
   }
 }
 
@@ -902,4 +984,7 @@ function clampNum(v, a, b) {
 }
 
 
+load();       // セーブ復元 or 初期化
+updateUI();   // メーター反映
+render();     // 画面描画（ループなら開始）
 
