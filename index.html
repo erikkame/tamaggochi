@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>たまっごち</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="top">
+      <h1>たまっごち</h1>
+      <div class="hint">世話して進化させよう（自動セーブ）</div>
+    </header>
+
+    <section class="panel">
+      <canvas id="game" width="240" height="180" aria-label="game"></canvas>
+    </section>
+
+    <section class="hud">
+      <div class="stats">
+        <div class="stat"><span>空腹</span><b id="hungerV">--</b></div>
+        <div class="stat"><span>ごきげん</span><b id="happyV">--</b></div>
+        <div class="stat"><span>体調</span><b id="healthV">--</b></div>
+        <div class="stat"><span>清潔</span><b id="cleanV">--</b></div>
+        <div class="stat"><span>年齢</span><b id="ageV">--</b></div>
+      </div>
+
+      <div class="row">
+        <button id="feedBtn">えさ</button>
+        <button id="playBtn">あそぶ</button>
+        <button id="cleanBtn">そうじ</button>
+        <button id="medBtn">くすり</button>
+        <button id="sleepBtn">ねる</button>
+      </div>
+
+      <div class="log" id="log"></div>
+    </section>
+
+    <footer class="foot">
+      <button id="resetBtn" class="ghost">データ初期化</button>
+    </footer>
+  </main>
+
+  <script src="main.js"></script>
+</body>
+</html>

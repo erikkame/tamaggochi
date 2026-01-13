@@ -1,0 +1,118 @@
+:root{
+  --bg:#0f1115;
+  --panel:#151924;
+  --ink:#e9edf3;
+  --sub:#9aa4b2;
+  --accent:#7cf0b6;
+  --danger:#ff6b6b;
+}
+
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  background: radial-gradient(1200px 600px at 50% -20%, #1f2b3f 0%, var(--bg) 55%);
+  color:var(--ink);
+  display:grid;
+  place-items:center;
+  min-height:100vh;
+}
+
+.shell{
+  width:min(760px, 94vw);
+  display:grid;
+  gap:12px;
+}
+
+.top h1{
+  margin:0;
+  font-size:20px;
+  letter-spacing: .08em;
+}
+.hint{ color:var(--sub); font-size:12px; margin-top:4px; }
+
+.panel{
+  background: linear-gradient(180deg, #1b2232 0%, var(--panel) 100%);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  padding:14px;
+}
+
+#game{
+  width:100%;
+  max-width:520px;
+  height:auto;
+  display:block;
+  margin:0 auto;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.10);
+  background:#0c1220;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.hud{
+  background: rgba(21,25,36,.7);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  padding:12px;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap:8px;
+}
+.stat{
+  background: rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:10px;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.stat span{ color:var(--sub); font-size:12px; }
+.stat b{ font-size:16px; }
+
+.row{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+button{
+  cursor:pointer;
+  border:none;
+  border-radius:10px;
+  padding:10px 12px;
+  background: rgba(124,240,182,.15);
+  color: var(--ink);
+  border:1px solid rgba(124,240,182,.35);
+  font-weight:700;
+}
+button:hover{ filter:brightness(1.08); }
+button:active{ transform: translateY(1px); }
+button.ghost{
+  background: transparent;
+  border:1px solid rgba(255,255,255,.18);
+  color: var(--sub);
+  font-weight:600;
+}
+
+.log{
+  margin-top:10px;
+  padding:10px;
+  border-radius:10px;
+  background: rgba(0,0,0,.25);
+  border:1px solid rgba(255,255,255,.08);
+  min-height:42px;
+  color: var(--sub);
+  font-size:13px;
+  line-height:1.4;
+}
+
+.foot{
+  display:flex;
+  justify-content:flex-end;
+}
