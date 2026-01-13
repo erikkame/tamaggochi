@@ -10,7 +10,7 @@
   <main class="shell">
     <header class="top">
       <h1>たまっごち</h1>
-      <div class="hint">世話して進化させよう（自動セーブ）</div>
+      <div class="hint">ハート制 / Attention / しつけ / 自動保存</div>
     </header>
 
     <section class="panel">
@@ -19,19 +19,28 @@
 
     <section class="hud">
       <div class="stats">
-        <div class="stat"><span>空腹</span><b id="hungerV">--</b></div>
-        <div class="stat"><span>ごきげん</span><b id="happyV">--</b></div>
-        <div class="stat"><span>体調</span><b id="healthV">--</b></div>
-        <div class="stat"><span>清潔</span><b id="cleanV">--</b></div>
+        <div class="stat"><span>おなか</span><b id="hungerV">----</b></div>
+        <div class="stat"><span>ごきげん</span><b id="happyV">----</b></div>
+        <div class="stat"><span>しつけ</span><b id="disciplineV">----</b></div>
+        <div class="stat"><span>状態</span><b id="stateV">--</b></div>
         <div class="stat"><span>年齢</span><b id="ageV">--</b></div>
       </div>
 
       <div class="row">
-        <button id="feedBtn">えさ</button>
-        <button id="playBtn">あそぶ</button>
+        <button id="mealBtn">ごはん</button>
+        <button id="snackBtn">おやつ</button>
+        <button id="gameBtn">ゲーム</button>
         <button id="cleanBtn">そうじ</button>
         <button id="medBtn">くすり</button>
-        <button id="sleepBtn">ねる</button>
+        <button id="discBtn">しつけ</button>
+        <button id="lightBtn">でんき</button>
+      </div>
+
+      <div class="subrow">
+        <div class="pill">💩 <span id="poopV">0</span></div>
+        <div class="pill">⚠️ Attention <span id="attV">OFF</span></div>
+        <div class="pill">ケアミス <span id="missV">0</span></div>
+        <div class="pill">ごっちP <span id="gpV">0</span></div>
       </div>
 
       <div class="log" id="log"></div>
