@@ -224,9 +224,6 @@ ui.meal.onclick = () => {
   const COST_MEAL = 10;
   if (state.gotchiPoints < COST_MEAL) return log("GPがたりない…（ごはん10GP）");
   state.gotchiPoints -= COST_MEAL;
-  const COST_SNACK = 15;
-  if (state.gotchiPoints < COST_SNACK) return log("GPがたりない…（おやつ15GP）");
-  state.gotchiPoints -= COST_SNACK;
 
 
   // 空腹0のときに稀に「食べない（しつけ必要）」を発生させる
@@ -398,8 +395,28 @@ function slotAdvance() {
 
 function judgeSlot3() {
   const combo = SLOT.reelIndex.map(i => SLOT.symbols[i]).join("");
-  const pay
+  const pay = slotPayout(combo);
 
+  state.gotchiPoints += pay;
+
+  const win = isWin(combo);
+  if (win) {
+    state.happyH = clampInt(state.happyH + 1, 0, HEART_MAX);
+    SLOT.resultText = `WIN +${pay}GP`;
+    log(`WIN! +${pay}GP`);
+  } else {
+    SLOT.resultText = `+${pay}GP`;
+    log(`+${pay}GP`);
+  }
+
+  SLOT.finished = true;
+  SLOT.blinkOn = true;
+  SLOT.blinkMs = 0;
+
+  resolveAttentionIfMatches(["HAPPY"]);
+  updateUI();
+  save();
+}
 
 ui.clean.onclick = () => {
   if (state.dead) return log("……");
@@ -415,8 +432,9 @@ ui.clean.onclick = () => {
 
 ui.med.onclick = () => {
   if (state.dead) return log("……");
+  if (state.sleeping) return log("ねている…");
   if (state.sickLevel === 0) return log("げんきだよ");
-}
+  if (state.medicineNeed <= 0) return log("くすりはいらない");
 
   state.medicineNeed = clampInt(state.medicineNeed - 1, 0, 2);
   if (state.medicineNeed === 0) {
@@ -471,6 +489,32 @@ ui.reset.onclick = () => {
   save();
 };
 
+function updateButtonsForMode() {
+  if (state.mode === "slot") {
+    ui.game.textContent = SLOT.finished ? "もどる" : (SLOT.spinning ? "ストップ" : "スタート");
+    ui.meal.disabled = true;
+    ui.snack.disabled = true;
+    ui.clean.disabled = true;
+    ui.med.disabled = true;
+    ui.disc.disabled = true;
+    ui.light.disabled = true;
+  } else {
+    ui.game.textContent = "ゲーム";
+    ui.meal.disabled = false;
+    ui.snack.disabled = false;
+    ui.clean.disabled = false;
+    ui.med.disabled = false;
+    ui.disc.disabled = false;
+    ui.light.disabled = false;
+  }
+}
+
+function updateUI() {
+  updateHud();
+  updateButtonsForMode();
+  render();
+}
+
 // =====================
 // Core loop
 // =====================
@@ -482,6 +526,7 @@ setInterval(() => {
   save();
 }, TICK_MS);
 
+updateButtonsForMode();
 updateHud();
 render();
 
@@ -975,6 +1020,10 @@ function drawText(x, y, text, color) {
 // =====================
 // Utils
 // =====================
+function randInt(a, b) {
+  // inclusive
+  return Math.floor(Math.random() * (b - a + 1)) + a;
+}
 function clampInt(v, a, b) {
   v = Math.floor(v);
   return Math.max(a, Math.min(b, v));
@@ -982,9 +1031,4 @@ function clampInt(v, a, b) {
 function clampNum(v, a, b) {
   return Math.max(a, Math.min(b, v));
 }
-
-
-load();       // セーブ復元 or 初期化
-updateUI();   // メーター反映
-render();     // 画面描画（ループなら開始）
 
