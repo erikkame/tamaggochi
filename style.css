@@ -24,6 +24,8 @@ body{
 .hint{ color:var(--sub); font-size:12px; margin-top:4px; }
 
 .panel{
+  position: relative; z-index: 1;
+
   background: linear-gradient(180deg, #1b2232 0%, var(--panel) 100%);
   border:1px solid rgba(255,255,255,.08);
   border-radius:14px;
@@ -31,6 +33,16 @@ body{
 }
 
 #game{
+  pointer-events: none;
+  background:
+    linear-gradient(#10341f, #0b2416); /* 地面のベース */
+  background-image:
+    radial-gradient(rgba(120, 255, 160, .25) 1px, transparent 1px),
+    radial-gradient(rgba(60, 200, 120, .18) 1px, transparent 1px);
+  background-size: 6px 6px, 8px 8px;
+  background-position: 0 0, 2px 3px;
+  image-rendering: pixelated;
+
   width:100%;
   max-width:520px;
   height:auto;
@@ -44,6 +56,7 @@ body{
 }
 
 .hud{
+  position: relative; z-index: 10;
   background: rgba(21,25,36,.7);
   border:1px solid rgba(255,255,255,.08);
   border-radius:14px;
